@@ -1,0 +1,23 @@
+---
+title: "Bikeshare: Meta file"
+author: Minh-Ngoc Huynh and Alexis Alexander
+output: html_notebook
+---
+
+We're just looking at September 2023 for right now. we want to know at a specific instance in time, how many riders there are? Now obviously the amount of people riding will be different for every day, so I think we may be looking for an average only.
+
+(Still need to add a map into the plot. Will do so soon.)
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(here)
+
+rm(list = ls())
+
+bikes <- read_csv("data_raw/202309-capitalbikeshare-tripdata.csv", show_col_types = FALSE) %>% clean_names()
+
+ggplot(data = bikes, mapping = aes(x = start_lng, y = start_lat)) +geom_point()
+```
+
+
