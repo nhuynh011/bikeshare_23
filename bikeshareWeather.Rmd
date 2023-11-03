@@ -1,0 +1,45 @@
+---
+title: "Pulling Weather data into R"
+output: html_notebook
+---
+
+So previously we worked on the bikeshare program, and with that there were relevant pieces of info missing that may affect ridership. Sometimes weather can affect how many people are biking. Here, we try to find the relevant weather data to go with the DC Captial Bikeshare program's dataset.
+
+While this (https://github.com/Ram-N/weatherData) seems really promising, it's built for an older version of R and so it doesn't work.
+
+Another one we found is (https://github.com/ALShum/rwunderground) but it's also outdated.
+
+We can see that finding the correct package is not easy, there are many monetized things.
+
+We found a non-monetized weather api here: https://open-meteo.com/
+And we could write an R adaptation of it, but we can also search online for it. https://cran.r-project.org/web/packages/openmeteo/index.html
+Since it's a CRAN package, you can download it on the R Studio.
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(here)
+library(openmeteo)
+```
+
+Now we have loaded it! We can look at the manual here: https://cran.r-project.org/web/packages/openmeteo/openmeteo.pdf
+
+We can test the functions in the package.
+
+```{r}
+weather_now("Montreal")
+```
+
+But we need to pull the weather data of Washington DC. These are the coords for DC: 38.9072° N, 77.0369° W
+
+```{r}
+weather_now(c(38.9072, 77.0369))
+```
+
+However this isn't what we need. We need the past month's weather data.
+
+```{r}
+DCWeather<- weather_history(c(38.9072, 77.0369), start= "2023-09-01", end= "2023-09-30", hourly = c("apparent_temperature", "windspeed_10m", "precipitation", "rain"))
+```
+
+Now we can try another package: https://cran.r-project.org/web/packages/rwunderground/index.html
