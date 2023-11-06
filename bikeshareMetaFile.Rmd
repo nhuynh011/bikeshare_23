@@ -12,6 +12,7 @@ We're just looking at September 2023 for right now. we want to know at a specifi
 library(tidyverse)
 library(janitor)
 library(here)
+library(openmeteo)
 
 rm(list = ls())
 
@@ -115,7 +116,33 @@ bikes_type %>%
   geom_line()+
   facet_wrap(~mday(t), scales = "free_x", ncol=7)
 ```
-Next task: Look at whether they are a member or a casual rider? Look at that comparison as well 
+
+
+```{r}
+df2s=bikes %>% 
+  select(rideable_type,member_casual,
+                	contains("start"),ride_id)%>% 
+  mutate(start_stop="start")%>%
+  rename(t=started_at,
+     	station_name=start_station_name,
+     	station_id=start_station_id,
+     	lat=start_lat,
+     	lng=start_lng)
+
+df2e=bikes %>%
+select(ride_id,rideable_type,member_casual,
+                	contains("end")) %>%
+  mutate(start_stop="stop") %>%
+  rename(t=ended_at,
+     	station_name=end_station_name,
+     	station_id=end_station_id,
+     	lat=end_lat,
+     	lng=end_lng)
+
+df2 = bind_rows(df2s, df2e)
+```
+
+
 
 
 
