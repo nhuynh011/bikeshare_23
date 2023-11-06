@@ -1,0 +1,163 @@
+---
+title: "EXPERIMENT 4_bikeshare data "
+output: html_notebook
+---
+
+# Data Packages 
+
+Baseine pacakges for our analysis
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(here)
+library(openmeteo)
+```
+
+
+# Loading the Bikeshare Raw Data
+```{r}
+df1 <- read_csv("data_raw/202309-capitalbikeshare-tripdata.csv", show_col_types = FALSE) %>% clean_names()
+```
+
+# Creating Dataframe 2 - Interjoing 
+```{r}
+df2s=df1 %>% 
+  select(rideable_type,member_casual,
+                	contains("start"),ride_id)%>% 
+  mutate(start_stop="start")%>%
+  rename(t=started_at,
+     	station_name=start_station_name,
+     	station_id=start_station_id,
+     	lat=start_lat,
+     	lng=start_lng)
+
+df2e=df1 %>%
+select(ride_id,rideable_type,member_casual,
+                	contains("end")) %>%
+  mutate(start_stop="stop") %>%
+  rename(t=ended_at,
+     	station_name=end_station_name,
+     	station_id=end_station_id,
+     	lat=end_lat,
+     	lng=end_lng)
+
+df2=bind_rows(df2s,df2e) %>%
+  arrange(t) %>%
+  mutate(rider_delta=(start_stop=="start")*2-1) %>% #change in ridership 
+  mutate(riders=cumsum(rider_delta)) %>%
+  relocate(riders,.after=t)
+
+```
+
+# Plotting the Dataframe
+
+```{r}
+df2 %>% 
+  ggplot(aes(t,riders)) +
+  geom_line()
+```
+# Creating a subsampled dataset 
+
+```{r}
+df_s=df2 %>% slice_head(n=1000)
+
+```
+
+Why looking at slicing to every one hundredth data point will be bad? - Will likely track features however will jump data points whether the data is sparse or not. Want the data to be equally spaced in time.
+
+Starting with 100 rows to get the calculation right and then see if oyu can do it with a bigger data set. 
+Data stored in number of seconds based on a reference point
+
+
+Round down to the nearest 10 mins, relocate t_f next to t, and filter the data points by t_f
+
+```{r}
+df_e=df_s |>
+  mutate(t_f=floor_date(t, "10 mins")) %>%
+   relocate(t_f,.after=t) %>%
+  slice_head(n=1,by=t_f)
+```
+
+
+# Applying to Previous Manipulations to the Entire Data Set 
+```{r}
+df_r=df2 |>
+  mutate(t_f=floor_date(t,"10 mins")) %>%
+  relocate(t_f,.after=t) %>%
+  slice_head(n=1,by=t_f)
+```
+
+ 
+# Creating the Associated Plot 
+```{r}
+
+p1=df2 %>% 
+  filter(day(t)==18) %>%
+  ggplot(aes(x=t, y=riders)) +
+  geom_line() +
+  ggtitle("Riders on 18Sep")
+
+p1+
+  geom_line(data=df_r %>% filter(day(t)==18),
+  color="red")
+
+```
+ 
+
+```{r}
+df_r=df2 |>
+  mutate(t_f=floor_date(t,"1 mins")) %>%
+  relocate(t_f,.after=t) %>%
+  slice_head(n=1,by=t_f)
+
+```
+
+
+```{r}
+p1=df2 %>% 
+  filter(day(t)==18) %>%
+  ggplot(aes(x=t, y=riders)) +
+  geom_line() +
+  ggtitle("Riders on 18Sep")
+
+p1+
+  geom_line(data=df_r %>% filter(day(t)==18),
+  color="red")
+```
+
+% Get Weather Data
+```{r}
+df_w=weather_history("Washington",
+                	start = "2023-09-01",
+                	end = "2023-09-30",
+                	hourly = c("apparent_temperature",
+                           	"wind_speed_10m",
+                           	"precipitation")
+)
+
+```
+# Merging bike and weather data
+
+```{r}
+df_s=df2 %>% slice_sample(n=1000)
+df_j=df_s %>% left_join(df_w,
+                     	by=join_by(closest(t>=datetime)))
+```
+
+
+```{r}
+df_j=df_s %>% 
+   left_join(df_w,by=join_by(closest(t>=datetime)))  %>%
+   relocate(datetime, .after=t)
+ 
+head(df_j)
+```
+
+```{r}
+df_j$t[1:5]
+df_j$datetime[1:5]
+
+```
+
+

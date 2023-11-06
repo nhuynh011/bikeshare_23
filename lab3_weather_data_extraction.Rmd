@@ -1,0 +1,77 @@
+---
+title: "Experiment 3: Weather Data"
+author: "Alexis Alexander"
+output: html_notebook
+---
+
+Load the packages includes openmeteo which is used to extract weather data 
+
+```{r}
+library(tidyverse)
+library(here)
+library(janitor)
+library(openmeteo)
+
+```
+
+
+```{r}
+# current weather in Montreal
+weather_now("Montreal")
+
+weather_now("Washington")
+```
+
+```{r}
+weather_forecast("nyc",
+hourly = c("temperature_2m", "precipitation"),
+response_units = list(
+temperature_unit = "fahrenheit",
+precipitation_unit = "inch"
+)
+)
+```
+
+```{r}
+weather_forecast("washington",
+hourly = c("temperature_2m", "precipitation"),
+response_units = list(
+temperature_unit = "fahrenheit",
+precipitation_unit = "inch"
+)
+)
+
+```
+
+
+## Weather History 
+
+```{r}
+weather_history("London",
+start = "2020-01-01",
+end = "2021-12-31",
+hourly = "cloudcover"
+)
+```
+```{r}
+weather_variables()
+```
+
+
+```{r}
+df2 = weather_history("Washington",
+start = "2023-09-01",
+end = "2023-09-30",
+hourly = c("apparent_temperature",
+           "wind_speed_10m",
+           "precipitation",
+           "rain"))
+```
+```{r}
+df_j$t[1:5]
+df_j$datetime[1:5]
+
+```
+##In R for data science, time and dates, timezones - what to do when data is record with the wrong time zone 
+
+
