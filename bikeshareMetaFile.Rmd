@@ -17,11 +17,11 @@ library(openmeteo)
 rm(list = ls())
 
 bikes <- read_csv("data_raw/202309-capitalbikeshare-tripdata.csv", show_col_types = FALSE) %>% clean_names()
+DCWeather<- weather_history(c(38.9072, 77.0369), start= "2023-09-01", end= "2023-09-30", hourly = c("apparent_temperature", "windspeed_10m", "precipitation", "rain"))
 
 ggplot(data = bikes, mapping = aes(x = start_lng, y = start_lat)) +geom_point()
 ```
 # Plots Defaults
-
 For consistency:
 
 ```{r}
@@ -118,6 +118,8 @@ bikes_type %>%
 ```
 
 
+### Computing bikers by groups
+
 ```{r}
 df2s=bikes %>% 
   select(rideable_type,member_casual,
@@ -144,5 +146,19 @@ df2 = bind_rows(df2s, df2e)
 
 
 
+```{r}
+startBikes = bikes |> 
+  select(rideable_type, member_casual, contains("start"), ride_id) |>
+  mutate(start_stop = "start") |>
+  rename(t = started_at, station_name = start_station_name, station_id = start_station_id, lat = start_lat, lng = start_lng)
 
+endBikes = bikes |> 
+  select(rideable_type, member_casual, contains("end"), ride_id) |>
+  mutate(start_stop = "stop") |> ##making new variable so we know what this data is when we merge
+  rename(t = ended_at, station_name = end_station_name, station_id = end_station_id, lat = end_lat, lng = end_lng)
 
+distanceBiked = bind_rows(startBikes, endBikes)
+
+```
+
+### For weather we will use a different file
